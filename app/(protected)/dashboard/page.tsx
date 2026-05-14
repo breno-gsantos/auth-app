@@ -1,39 +1,155 @@
-import { auth } from "@/auth"
-import { LogoutButton } from "@/components/auth/logout-button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { auth } from "@/auth";
+import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
+import { ExpenseChart } from "@/components/dashboard/expense-chart";
+import { StatCard } from "@/components/dashboard/stat-card";
+import { UpcomingRenewals } from "@/components/dashboard/upcoming-renewals";
+import { Card, CardContent } from "@/components/ui/card";
+import prisma from "@/lib/db";
+import { CalendarDays, CreditCard, DollarSign, Sparkles, TrendingUp } from "lucide-react";
 import { redirect } from "next/navigation";
 
-export default async function DashboardPage(){
-    const session = await auth();
+export default async function DashboardPage() {
+  const session = await auth();
 
-    if(!session){
-        redirect('/login')
+  if (!session?.user) {
+    redirect('/login')
+  }
+
+  const subscriptions = await prisma.subscription.findMany({
+    where: {
+      userId: session.user.id
+    }
+  })
+
+  const monthlyTotal = subscriptions.reduce((acc, sub) => {
+    if (sub.billingCycle === 'MONTHLY') {
+      return acc + sub.price
     }
 
-    const sessionData = [
-        { id: 1, label: session?.user.id, title: 'ID' },
-        { id: 2, label: session?.user.name, title: 'Nome' },
-        { id: 3, label: session?.user.email, title: 'Email' },
-        { id: 4, label: session?.user.role, title: 'Role' },
-    ]
+    return acc + sub.price / 12
+  }, 0)
 
-    return (
-        <main className='flex flex-col min-h-screen items-center justify-center'>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Consulta de Dados</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {sessionData.map(({id, title, label}) => (
-                        <h1 key={id}>
-                            <span className="text-base font-medium">{title}</span>:  <span className="text-muted-foreground italic">{label}</span>
-                        </h1>
-                    ))}
-                </CardContent>
-                <CardFooter>
-                    <LogoutButton />
-                </CardFooter>
-            </Card>
-        </main>
-    )
+  const yearlyTotal = monthlyTotal * 12
+
+  const activeCount = subscriptions.filter((sub) => sub.isActive).length
+
+  const nextRenewal = subscriptions.filter((sub) => sub.isActive).sort((a, b) => 
+    new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime()
+  )[0]
+
+  const categoryTotals = subscriptions.reduce((acc, sub) => {
+    if (!sub.category) return acc;
+
+    const monthlyValue = sub.billingCycle === 'MONTHLY' ? sub.price : sub.price / 12
+
+    acc[sub.category] = (acc[sub.category] || 0) + monthlyValue
+
+    return acc
+  }, {} as Record<string, number>)
+
+
+  const expensesByCategory = Object.entries(categoryTotals).map(
+    ([category, total]) => ({
+      category,
+      total
+    })
+  )
+
+  const upcomingRenewals = subscriptions.filter((sub) => sub.isActive).sort((a, b) => 
+    new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime()
+  ).slice(0, 5)
+
+  const topCategory = Object.entries(categoryTotals).sort(([, a], [, b]) => b - a)[0]?.[0] || 'Sem categoria'
+
+  function formatCurrency(value: number) {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
+  }
+
+  const stats = [
+  {
+    title: "Gasto Mensal",
+    value: formatCurrency(monthlyTotal),
+    description: "Total recorrente mensal",
+    icon: DollarSign,
+  },
+
+  {
+    title: "Gasto Anual Estimado",
+    value: formatCurrency(yearlyTotal),
+    description: "Projeção para o ano",
+    icon: TrendingUp,
+  },
+
+  {
+    title: "Assinaturas Ativas",
+    value: activeCount.toString(),
+    description: `${subscriptions.length - activeCount} pausadas`,
+    icon: CreditCard,
+  },
+
+  {
+    title: "Próxima Cobrança",
+
+    value: nextRenewal
+      ? formatCurrency(nextRenewal.price)
+      : "—",
+
+    description: nextRenewal
+      ? `${nextRenewal.name}`
+      : "Nenhuma cobrança pendente",
+
+    icon: CalendarDays,
+  },
+]
+
+  return (
+    <DashboardLayout title="Dashboard" user={session.user}>
+      <div className="space-y-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 ">
+          {stats.map(({ title, value, description, icon: Icon }) => (
+            <StatCard
+              key={title}
+              title={title}
+              value={value}
+              description={description}
+              icon={Icon}
+            />
+          ))}
+        </div>
+
+        <Card className="border-border/50 bg-linear-to-br from-accent/5 to-transparent backdrop-blur-sm">
+          <CardContent className="flex items-center gap-4 p-4">
+            <div className="flex size-10 items-center justify-center rounded-lg bg-accent/10">
+              <Sparkles className="size-5 text-accent" />
+            </div>
+            <div className="flex-1">
+              <p className="text-sm font-medium">Insights do mês</p>
+              <p className="text-sm text-muted-foreground">
+                Você gastará{" "}
+                <span className="font-semibold text-foreground">
+                  {new Intl.NumberFormat("pt-BR", {
+                    style: "currency",
+                    currency: "BRL",
+                  }).format(yearlyTotal)}
+                </span>{" "}
+                este ano. Sua maior categoria é{" "}
+                <span className="font-semibold text-foreground">
+                  {topCategory}
+                </span>
+                .
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ExpenseChart data={expensesByCategory} />
+          <UpcomingRenewals subscriptions={upcomingRenewals} />
+        </div>
+      </div>
+    </DashboardLayout>
+  )
 }

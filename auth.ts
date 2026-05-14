@@ -39,18 +39,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       if(!existingUser) return token;
 
-      token.role = existingUser.role
-
       return token;
     },
 
     async session({token, session}){
       if(token.sub && session.user){
         session.user.id = token.sub
-      }
-
-      if(token.role && session.user){
-        session.user.role = token.role
       }
 
       return session

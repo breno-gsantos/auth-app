@@ -1,23 +1,19 @@
-import { LoginButton } from "@/components/auth/login-button";
-import { Button } from "@/components/ui/button";
-import { homeData } from "@/constants/data";
+import { Benefits } from "@/components/home/benefits";
+import { CTA } from "@/components/home/cta";
+import { Features } from "@/components/home/features";
+import { Footer } from "@/components/home/footer";
+import { Hero } from "@/components/home/hero";
+import { Navbar } from "@/components/home/navbar";
 
 export default function Home() {
-  const {title, loginBtn, subtitle} = homeData;
-
   return (
-    <main className='flex flex-col min-h-screen items-center justify-center bg-linear-to-br from-zinc-100 via-zinc-50 to-white'>
-      <div className="space-y-6 text-center">
-        <h1 className="text-6xl font-semibold drop-shadow-md">{title}</h1>
-        <p className="text-muted-foreground text-lg">{subtitle}</p>
-        <div>
-          <LoginButton>
-            <Button className="w-full" size='lg'>
-              {loginBtn}
-            </Button>
-          </LoginButton>
-        </div>
-      </div>
-    </main>
-  );
+    <>
+      <Navbar />
+      <Hero />
+      <Features />
+      <Benefits />
+      <CTA />
+      <Footer />
+    </>
+  )
 }

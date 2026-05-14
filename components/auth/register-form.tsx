@@ -69,7 +69,7 @@ export function RegisterForm(){
     }
 
     return (
-        <CardWrapper header="Criar uma conta" backButtonLabel="Já tem uma conta?" backButtonHref="/login" showSocial>
+        <CardWrapper header="Criar uma conta" backButtonLabel="Já tem uma conta?" backButtonHref="/login">
             <Form {...form}>
                 <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
                     <FormField control={control} name='name' render={({field}) => (
@@ -103,7 +103,7 @@ export function RegisterForm(){
                     )} />
 
                     {formState.errors.root && (
-                        <Alert variant='destructive' className="bg-rose-200">
+                        <Alert variant='destructive'>
                             <AlertCircleIcon />
                             <AlertDescription>
                                 {formState.errors.root.message}

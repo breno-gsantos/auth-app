@@ -60,7 +60,7 @@ export function LoginForm(){
     }
 
     return (
-        <CardWrapper header="Bem-Vindo de volta!" backButtonLabel="Não tem uma conta?" backButtonHref="/register" showSocial>
+        <CardWrapper header="Bem-Vindo de volta!" backButtonLabel="Não tem uma conta?" backButtonHref="/register">
             <Form {...form}>
                 <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>
                     <FormField control={control} name='email' render={({field}) => (
@@ -84,7 +84,7 @@ export function LoginForm(){
                     )} />
 
                     {formState.errors.root && (
-                        <Alert variant='destructive' className="bg-rose-200">
+                        <Alert variant='destructive'>
                             <AlertCircleIcon />
                             <AlertDescription>
                                 {formState.errors.root.message}

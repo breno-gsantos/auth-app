@@ -13,7 +13,7 @@ export default async function AuthLayout({children}: Props){
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-zinc-100 via-zinc-50 to-white">
+        <div className="flex min-h-screen items-center justify-center bg-linear-to-br">
             {children}
         </div>
     )
