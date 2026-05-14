@@ -2,10 +2,13 @@ import { auth } from "@/auth";
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout";
 import { ExpenseChart } from "@/components/dashboard/expense-chart";
 import { StatCard } from "@/components/dashboard/stat-card";
+import { SubscriptionCard } from "@/components/dashboard/subscription-card";
 import { UpcomingRenewals } from "@/components/dashboard/upcoming-renewals";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import prisma from "@/lib/db";
-import { CalendarDays, CreditCard, DollarSign, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowRight, CalendarDays, CreditCard, DollarSign, Sparkles, TrendingUp } from "lucide-react";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
@@ -19,6 +22,16 @@ export default async function DashboardPage() {
     where: {
       userId: session.user.id
     }
+  })
+
+  const recentSubscriptions = await prisma.subscription.findMany({
+    where: {
+      userId: session.user.id
+    },
+    orderBy: {
+      createdAt: 'desc'
+    },
+    take: 5
   })
 
   const monthlyTotal = subscriptions.reduce((acc, sub) => {
@@ -149,6 +162,27 @@ export default async function DashboardPage() {
           <ExpenseChart data={expensesByCategory} />
           <UpcomingRenewals subscriptions={upcomingRenewals} />
         </div>
+
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <CardTitle className='text-base font-medium'>Assinaturas Recentes</CardTitle>
+            <Button variant='ghost' size='lg' asChild>
+              <Link href='/subscriptions' className='gap-1 text-sm'>
+                  Ver Todas
+                  <ArrowRight className='size-4' />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent className='space-y-3'>
+            {recentSubscriptions.length > 0 ? (
+              recentSubscriptions.map((sub) => (
+                <SubscriptionCard key={sub.id} subscription={sub} />
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">Nenhuma assinatura encontrada.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </DashboardLayout>
   )
