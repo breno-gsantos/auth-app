@@ -14,7 +14,7 @@ interface SubscriptionCardProps {
 }
 
 const categoryColors: Record<string, string> = {
-  Entretenimento: "bg-pink-500/10 text-pink-500 border-pink-500/20",
+  Streaming: "bg-pink-500/10 text-pink-500 border-pink-500/20",
   Produtividade: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   Desenvolvimento: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
   Armazenamento: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
